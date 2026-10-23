@@ -1,0 +1,15 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "kloc-shopify",
+  "description": "KLOC Technologies Shopify tooling for Claude Code.",
+  "owner": { "name": "KLOC Technologies", "url": "https://github.com/kloc-mksd" },
+  "plugins": [
+    {
+      "name": "shopify-translations",
+      "source": "./",
+      "description": "Audit a Shopify store for missing or outdated translations by resource type, translate them in validated batches and register them natively (Translate & Adapt).",
+      "version": "1.0.0",
+      "category": "shopify"
+    }
+  ]
+}

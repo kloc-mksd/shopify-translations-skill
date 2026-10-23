@@ -1,0 +1,7 @@
+{
+  "name": "shopify-translations",
+  "version": "1.0.0",
+  "description": "Audit a Shopify store for missing or outdated translations by resource type, translate them in validated batches and register them natively (Translate & Adapt).",
+  "author": { "name": "KLOC Technologies", "url": "https://github.com/kloc-mksd" },
+  "repository": "https://github.com/kloc-mksd/shopify-translations-skill"
+}
