@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.getcwd(), ".env"))
 STORE = os.getenv("SHOPIFY_STORE")
-URL = f"https://{STORE}/admin/api/2025-10/graphql.json"
+URL = f"https://{STORE}/admin/api/2026-10/graphql.json"
 H = {"X-Shopify-Access-Token": os.getenv("SHOPIFY_ACCESS_TOKEN") or "", "Content-Type": "application/json"}
 WORK = os.path.join(os.getcwd(), "translations-work")
 
