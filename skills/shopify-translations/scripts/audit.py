@@ -4,6 +4,7 @@
   python audit.py --types PRODUCT PRODUCT_OPTION PRODUCT_OPTION_VALUE \
       --product-query "status:active created_at:>=2026-10-16" --keys title product_type body_html name
   python audit.py --types COLLECTION --keys title --issue outdated
+  python audit.py --skip-fields PRODUCT.meta_title PRODUCT.meta_description --skip-metafields gmc.title
 
 Writes translations-work/gaps.jsonl (one row per field x locale) and
 translations-work/tm.json (current translations, used as translation memory).
@@ -34,6 +35,17 @@ def product_scope(query):
     return ids
 
 
+def product_metafield_ids(names):
+    """gids of product metafields named namespace.key (their translations live on the Metafield)"""
+    ids = set()
+    for n in names:
+        ns, key = n.split(".", 1)
+        q = '{ products { edges { node { id metafield(namespace:%s, key:%s) { id } } } } }' % (
+            json.dumps(ns), json.dumps(key))
+        ids.update(r["metafield"]["id"] for r in shop.bulk(q) if r.get("metafield"))
+    return ids
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--types", nargs="*")
@@ -42,6 +54,10 @@ def main():
     ap.add_argument("--product-query", default="status:active",
                     help='Shopify product search for product-owned types; "" = all products')
     ap.add_argument("--issue", choices=["missing", "outdated", "both"], default="both")
+    ap.add_argument("--skip-fields", nargs="*", default=[],
+                    help="TYPE.key fields another process owns, e.g. PRODUCT.meta_title")
+    ap.add_argument("--skip-metafields", nargs="*", default=[],
+                    help="product metafields (namespace.key) another process owns, e.g. gmc.title")
     a = ap.parse_args()
 
     domain, locales, live = shop.shop_info()
@@ -54,6 +70,8 @@ def main():
     scope = product_scope(a.product_query) if PRODUCT_TYPES & set(types) else set()
     if scope:
         print(f"product scope '{a.product_query}': {len(scope)} ids", flush=True)
+    skip_mf = product_metafield_ids(a.skip_metafields) if "METAFIELD" in types else set()
+    skip_fields = set(a.skip_fields)
 
     aliases = " ".join(f'{l.replace("-", "_")}: translations(locale:"{l}"){{key value outdated}}' for l in locales)
     gaps, tm, summary = [], collections.defaultdict(dict), collections.Counter()
@@ -61,13 +79,13 @@ def main():
         q = f"{{ translatableResources(resourceType:{t}) {{ edges {{ node {{ resourceId translatableContent {{ key value digest type }} {aliases} }} }} }} }}"
         for r in shop.bulk(q):
             rid = r["resourceId"]
-            if t.startswith("ONLINE_STORE_THEME") and live_num not in rid:
+            if t.startswith("ONLINE_STORE_THEME") and live_num not in rid or rid in skip_mf:
                 continue
             # out-of-scope resources still feed translation memory, so new items reuse the catalogue
             in_scope = t not in PRODUCT_TYPES or rid in scope
             for c in r["translatableContent"]:
                 src = c["value"] or ""
-                if a.keys and c["key"] not in a.keys:
+                if a.keys and c["key"] not in a.keys or f"{t}.{c['key']}" in skip_fields:
                     continue
                 if t.startswith("PRODUCT_OPTION") and src in PLACEHOLDER_OPTIONS:
                     continue

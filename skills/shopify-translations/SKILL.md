@@ -17,6 +17,10 @@ myshopify domain). No profile for this store? Copy the iwasasari one's headings 
 fill in what the user tells you (brand name, terms never to translate, register, glossary) and
 keep the store-specific facts out of the generic brief.
 
+Some fields have a fixed format owned by someone else (iwasasari: product SEO title/description
+and the `gmc.title` Google feed title). Follow the profile's rules for them and pass its
+`--skip-fields` / `--skip-metafields` to every audit so they are never translated freehand.
+
 ## 2. Audit
 
 ```bash
